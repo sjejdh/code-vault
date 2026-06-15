@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 标签Mapper XML映射文件 -->
+<mapper namespace="com.codevault.mapper.TagMapper">
+
+    <!-- 结果映射：将数据库字段映射到Tag实体类属性 -->
+    <resultMap id="tagResultMap" type="com.codevault.entity.Tag">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <!-- 基础列 -->
+    <sql id="baseColumns">
+        id, name, create_time
+    </sql>
+
+    <!-- 查询所有标签 -->
+    <select id="findAll" resultMap="tagResultMap">
+        SELECT <include refid="baseColumns"/>
+        FROM tag
+        ORDER BY id ASC
+    </select>
+
+    <!-- 根据ID查询标签 -->
+    <select id="findById" parameterType="java.lang.Long" resultMap="tagResultMap">
+        SELECT <include refid="baseColumns"/>
+        FROM tag
+        WHERE id = #{id}
+    </select>
+
+    <!-- 根据名称查询标签 -->
+    <select id="findByName" parameterType="java.lang.String" resultMap="tagResultMap">
+        SELECT <include refid="baseColumns"/>
+        FROM tag
+        WHERE name = #{name}
+    </select>
+
+    <!-- 新增标签 -->
+    <insert id="insert" parameterType="com.codevault.entity.Tag" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO tag (name)
+        VALUES (#{name})
+    </insert>
+
+    <!-- 根据片段ID查询关联的标签列表（通过snippet_tag关联表） -->
+    <select id="findBySnippetId" parameterType="java.lang.Long" resultMap="tagResultMap">
+        SELECT t.id, t.name, t.create_time
+        FROM tag t
+        INNER JOIN snippet_tag st ON t.id = st.tag_id
+        WHERE st.snippet_id = #{snippetId}
+    </select>
+
+    <!-- 插入片段-标签关联记录 -->
+    <insert id="insertSnippetTag">
+        INSERT INTO snippet_tag (snippet_id, tag_id)
+        VALUES (#{snippetId}, #{tagId})
+    </insert>
+
+    <!-- 根据片段ID删除所有关联标签 -->
+    <delete id="deleteBySnippetId" parameterType="java.lang.Long">
+        DELETE FROM snippet_tag WHERE snippet_id = #{snippetId}
+    </delete>
+
+</mapper>

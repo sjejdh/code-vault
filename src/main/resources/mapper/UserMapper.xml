@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 用户Mapper XML映射文件 -->
+<mapper namespace="com.codevault.mapper.UserMapper">
+
+    <!-- 结果映射：将数据库字段映射到User实体类属性 -->
+    <resultMap id="userResultMap" type="com.codevault.entity.User">
+        <id property="id" column="id"/>
+        <result property="username" column="username"/>
+        <result property="password" column="password"/>
+        <result property="nickname" column="nickname"/>
+        <result property="avatar" column="avatar"/>
+        <result property="email" column="email"/>
+        <result property="role" column="role"/>
+        <result property="status" column="status"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <!-- 基础列 -->
+    <sql id="baseColumns">
+        id, username, password, nickname, avatar, email, role, status, create_time, update_time
+    </sql>
+
+    <!-- 根据用户名查询用户 -->
+    <select id="findByUsername" parameterType="java.lang.String" resultMap="userResultMap">
+        SELECT <include refid="baseColumns"/>
+        FROM user
+        WHERE username = #{username}
+    </select>
+
+    <!-- 根据用户ID查询用户 -->
+    <select id="findById" parameterType="java.lang.Long" resultMap="userResultMap">
+        SELECT <include refid="baseColumns"/>
+        FROM user
+        WHERE id = #{id}
+    </select>
+
+    <!-- 插入新用户 -->
+    <insert id="insert" parameterType="com.codevault.entity.User" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO user (username, password, nickname, avatar, email, role, status)
+        VALUES (#{username}, #{password}, #{nickname}, #{avatar}, #{email}, #{role}, #{status})
+    </insert>
+
+    <!-- 更新用户信息（动态SQL，只更新非空字段） -->
+    <update id="update" parameterType="com.codevault.entity.User">
+        UPDATE user
+        <set>
+            <if test="username != null and username != ''">username = #{username},</if>
+            <if test="password != null and password != ''">password = #{password},</if>
+            <if test="nickname != null">nickname = #{nickname},</if>
+            <if test="avatar != null">avatar = #{avatar},</if>
+            <if test="email != null">email = #{email},</if>
+            <if test="role != null and role != ''">role = #{role},</if>
+            <if test="status != null">status = #{status},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+</mapper>

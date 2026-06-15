@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 点赞Mapper XML映射文件 -->
+<mapper namespace="com.codevault.mapper.LikeMapper">
+
+    <!-- 结果映射：将数据库字段映射到Like实体类属性 -->
+    <resultMap id="likeResultMap" type="com.codevault.entity.Like">
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="snippetId" column="snippet_id"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <!-- 新增点赞记录 -->
+    <insert id="insert" parameterType="com.codevault.entity.Like" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO `like` (user_id, snippet_id, create_time)
+        VALUES (#{userId}, #{snippetId}, #{createTime})
+    </insert>
+
+    <!-- 查询用户是否已点赞指定片段 -->
+    <select id="findByUserAndSnippet" resultMap="likeResultMap">
+        SELECT id, user_id, snippet_id, create_time
+        FROM `like`
+        WHERE user_id = #{userId} AND snippet_id = #{snippetId}
+    </select>
+
+    <!-- 取消点赞 -->
+    <delete id="deleteByUserAndSnippet">
+        DELETE FROM `like`
+        WHERE user_id = #{userId} AND snippet_id = #{snippetId}
+    </delete>
+
+</mapper>
