@@ -39,11 +39,12 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 处理未知异常
+     * 处理未知异常（生产环境不暴露堆栈信息）
      */
     @ExceptionHandler(Exception.class)
     public Result<?> handleException(Exception e) {
         log.error("系统异常：{}", e.getMessage(), e);
-        return Result.error("系统异常");
+        // 生产环境只返回通用提示，不暴露内部错误细节
+        return Result.error(500, "系统繁忙，请稍后重试");
     }
 }

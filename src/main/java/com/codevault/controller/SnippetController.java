@@ -3,6 +3,9 @@ package com.codevault.controller;
 import com.codevault.common.result.Result;
 import com.codevault.dto.SnippetDTO;
 import com.codevault.service.SnippetService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +18,7 @@ import jakarta.servlet.http.HttpServletRequest;
  * 提供代码片段的增删改查REST接口
  * 公开接口路径为 /api/snippet/public/**，在JwtInterceptor中已排除拦截
  */
+@Tag(name = "代码片段模块", description = "代码片段的查询、创建、更新、删除")
 @Slf4j
 @RestController
 @RequestMapping("/api/snippet")
@@ -34,6 +38,7 @@ public class SnippetController {
      * @param pageSize   每页大小（默认10）
      * @return 分页结果
      */
+    @Operation(summary = "分页查询公开片段")
     @GetMapping("/public")
     public Result getPublicSnippets(
             @RequestParam(required = false) String keyword,
@@ -51,6 +56,7 @@ public class SnippetController {
      * @param limit 返回条数（默认10）
      * @return 热门片段列表
      */
+    @Operation(summary = "查询热门片段")
     @GetMapping("/public/hot")
     public Result getHotSnippets(@RequestParam(required = false) Integer limit) {
         log.info("查询热门片段，条数：{}", limit);
@@ -64,6 +70,7 @@ public class SnippetController {
      * @param id 片段ID
      * @return 片段详情
      */
+    @Operation(summary = "获取片段详情")
     @GetMapping("/public/{id}")
     public Result getSnippetDetail(@PathVariable Long id) {
         log.info("查看公开片段详情，片段ID：{}", id);
@@ -79,6 +86,8 @@ public class SnippetController {
      * @param pageSize  每页大小（默认10）
      * @return 我的片段分页列表
      */
+    @Operation(summary = "查询我的片段")
+    @SecurityRequirement(name = "BearerAuth")
     @GetMapping("/my")
     public Result getMySnippets(HttpServletRequest request,
                                 @RequestParam(required = false) Integer page,
@@ -95,6 +104,8 @@ public class SnippetController {
      * @param dto     代码片段数据（带参数校验）
      * @return 操作结果
      */
+    @Operation(summary = "创建代码片段")
+    @SecurityRequirement(name = "BearerAuth")
     @PostMapping
     public Result createSnippet(HttpServletRequest request,
                                 @RequestBody @Validated SnippetDTO dto) {
@@ -111,6 +122,8 @@ public class SnippetController {
      * @param dto      代码片段数据（带参数校验）
      * @return 操作结果
      */
+    @Operation(summary = "更新代码片段")
+    @SecurityRequirement(name = "BearerAuth")
     @PutMapping("/{id}")
     public Result updateSnippet(HttpServletRequest request,
                                 @PathVariable("id") Long snippetId,
@@ -128,6 +141,8 @@ public class SnippetController {
      * @param snippetId 片段ID
      * @return 操作结果
      */
+    @Operation(summary = "删除代码片段")
+    @SecurityRequirement(name = "BearerAuth")
     @DeleteMapping("/{id}")
     public Result deleteSnippet(HttpServletRequest request,
                                 @PathVariable("id") Long snippetId) {

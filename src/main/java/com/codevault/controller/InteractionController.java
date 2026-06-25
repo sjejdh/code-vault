@@ -10,6 +10,9 @@ import com.codevault.mapper.CollectionMapper;
 import com.codevault.mapper.LikeMapper;
 import com.codevault.mapper.SnippetMapper;
 import com.codevault.mapper.TagMapper;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,6 +25,7 @@ import java.util.*;
  * 提供点赞、收藏、取消点赞、取消收藏等REST接口
  * 所有接口均需登录（JWT认证）
  */
+@Tag(name = "互动模块", description = "点赞、收藏相关接口")
 @Slf4j
 @RestController
 @RequestMapping("/api/interaction")
@@ -47,6 +51,8 @@ public class InteractionController {
      * @param snippetId 片段ID
      * @return 操作结果
      */
+    @Operation(summary = "点赞代码片段")
+    @SecurityRequirement(name = "BearerAuth")
     @PostMapping("/like/{snippetId}")
     public Result likeSnippet(HttpServletRequest request,
                               @PathVariable Long snippetId) {
@@ -86,6 +92,8 @@ public class InteractionController {
      * @param snippetId 片段ID
      * @return 操作结果
      */
+    @Operation(summary = "取消点赞")
+    @SecurityRequirement(name = "BearerAuth")
     @DeleteMapping("/like/{snippetId}")
     public Result unlikeSnippet(HttpServletRequest request,
                                 @PathVariable Long snippetId) {
@@ -117,6 +125,8 @@ public class InteractionController {
      * @param snippetId 片段ID
      * @return 操作结果
      */
+    @Operation(summary = "收藏代码片段")
+    @SecurityRequirement(name = "BearerAuth")
     @PostMapping("/collect/{snippetId}")
     public Result collectSnippet(HttpServletRequest request,
                                  @PathVariable Long snippetId) {
@@ -156,6 +166,8 @@ public class InteractionController {
      * @param snippetId 片段ID
      * @return 操作结果
      */
+    @Operation(summary = "取消收藏")
+    @SecurityRequirement(name = "BearerAuth")
     @DeleteMapping("/collect/{snippetId}")
     public Result uncollectSnippet(HttpServletRequest request,
                                   @PathVariable Long snippetId) {
@@ -186,6 +198,8 @@ public class InteractionController {
      * @param pageSize 每页大小（默认10）
      * @return 收藏的分页列表
      */
+    @Operation(summary = "查询我的收藏列表")
+    @SecurityRequirement(name = "BearerAuth")
     @GetMapping("/collect/my")
     public Result getMyCollections(HttpServletRequest request,
                                   @RequestParam(required = false) Integer page,

@@ -4,6 +4,8 @@ import com.codevault.common.result.Result;
 import com.codevault.dto.LoginDTO;
 import com.codevault.dto.RegisterDTO;
 import com.codevault.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,6 +18,7 @@ import jakarta.annotation.Resource;
 /**
  * 用户控制器
  */
+@Tag(name = "用户模块", description = "用户注册、登录相关接口")
 @Slf4j
 @RestController
 @RequestMapping("/api/user")
@@ -29,6 +32,7 @@ public class UserController {
      * @param dto 注册请求参数（带参数校验）
      * @return 统一响应结果
      */
+    @Operation(summary = "用户注册")
     @PostMapping("/register")
     public Result register(@RequestBody @Validated RegisterDTO dto) {
         log.info("收到注册请求，用户名：{}", dto.getUsername());
@@ -40,6 +44,7 @@ public class UserController {
      * @param dto 登录请求参数（带参数校验）
      * @return 统一响应结果（包含token）
      */
+    @Operation(summary = "用户登录")
     @PostMapping("/login")
     public Result login(@RequestBody @Validated LoginDTO dto) {
         log.info("收到登录请求，用户名：{}", dto.getUsername());
