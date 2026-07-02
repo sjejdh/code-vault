@@ -60,7 +60,15 @@ public class WebConfig implements WebMvcConfigurer {
                 .excludePathPatterns(
                         "/api/user/login",       // 登录接口
                         "/api/user/register",    // 注册接口
-                        "/api/snippet/public/**" // 公开的代码片段查询接口
+                        "/api/snippet/public/**",// 公开的代码片段查询接口
+                        // Swagger 接口文档相关路径
+                        "/swagger-ui.html",
+                        "/swagger-ui/**",
+                        "/v3/api-docs/**",
+                        "/swagger-resources/**",
+                        "/webjars/**",
+                        // Actuator 健康检查
+                        "/actuator/**"
                 );
     }
 }
