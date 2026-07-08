@@ -6,7 +6,7 @@
 <mapper namespace="com.codevault.mapper.TagMapper">
 
     <!-- 结果映射：将数据库字段映射到Tag实体类属性 -->
-    <resultMap id="tagResultMap" type="com.codevault.entity.Tag">
+    <resultMap id="tagResultMap" type="com.codevault.entity.TagEntity">
         <id property="id" column="id"/>
         <result property="name" column="name"/>
         <result property="createTime" column="create_time"/>
@@ -39,7 +39,7 @@
     </select>
 
     <!-- 新增标签 -->
-    <insert id="insert" parameterType="com.codevault.entity.Tag" useGeneratedKeys="true" keyProperty="id">
+    <insert id="insert" parameterType="com.codevault.entity.TagEntity" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO tag (name)
         VALUES (#{name})
     </insert>
@@ -62,5 +62,17 @@
     <delete id="deleteBySnippetId" parameterType="java.lang.Long">
         DELETE FROM snippet_tag WHERE snippet_id = #{snippetId}
     </delete>
+
+    <!-- 批量查询多个片段关联的标签 -->
+    <select id="findBySnippetIds" resultType="java.util.Map">
+        SELECT st.snippet_id AS snippetId, t.id AS tagId, t.name AS tagName
+        FROM snippet_tag st
+        INNER JOIN tag t ON st.tag_id = t.id
+        WHERE st.snippet_id IN
+        <foreach collection="snippetIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        ORDER BY st.snippet_id, t.id
+    </select>
 
 </mapper>

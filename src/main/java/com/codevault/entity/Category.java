@@ -2,7 +2,7 @@ package com.codevault.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 /**
  * 分类实体类，对应 category 表
@@ -23,12 +23,12 @@ public class Category {
 
     /** 创建时间 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private Date createTime;
+    private LocalDateTime createTime;
 
     public Category() {
     }
 
-    public Category(Long id, String name, String icon, Integer sortOrder, Date createTime) {
+    public Category(Long id, String name, String icon, Integer sortOrder, LocalDateTime createTime) {
         this.id = id;
         this.name = name;
         this.icon = icon;
@@ -68,11 +68,11 @@ public class Category {
         this.sortOrder = sortOrder;
     }
 
-    public Date getCreateTime() {
+    public LocalDateTime getCreateTime() {
         return createTime;
     }
 
-    public void setCreateTime(Date createTime) {
+    public void setCreateTime(LocalDateTime createTime) {
         this.createTime = createTime;
     }
 }

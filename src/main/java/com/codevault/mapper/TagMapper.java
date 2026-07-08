@@ -1,10 +1,11 @@
 package com.codevault.mapper;
 
-import com.codevault.entity.Tag;
+import com.codevault.entity.TagEntity;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 标签数据访问层接口
@@ -17,35 +18,35 @@ public interface TagMapper {
      * 查询所有标签
      * @return 标签列表
      */
-    List<Tag> findAll();
+    List<TagEntity> findAll();
 
     /**
      * 根据ID查询标签
      * @param id 标签ID
      * @return 标签信息
      */
-    Tag findById(Long id);
+    TagEntity findById(Long id);
 
     /**
      * 根据名称查询标签
      * @param name 标签名称
      * @return 标签信息
      */
-    Tag findByName(String name);
+    TagEntity findByName(String name);
 
     /**
      * 新增标签
      * @param tag 标签实体
      * @return 影响行数
      */
-    int insert(Tag tag);
+    int insert(TagEntity tag);
 
     /**
      * 根据片段ID查询关联的标签列表
      * @param snippetId 代码片段ID
      * @return 标签列表
      */
-    List<Tag> findBySnippetId(Long snippetId);
+    List<TagEntity> findBySnippetId(Long snippetId);
 
     /**
      * 插入片段-标签关联记录
@@ -61,4 +62,11 @@ public interface TagMapper {
      * @return 影响行数
      */
     int deleteBySnippetId(Long snippetId);
+
+    /**
+     * 批量查询多个片段关联的标签
+     * @param snippetIds 代码片段ID列表
+     * @return 标签列表（每条记录包含 snippet_id 和 tag 信息）
+     */
+    List<Map<String, Object>> findBySnippetIds(@Param("snippetIds") List<Long> snippetIds);
 }

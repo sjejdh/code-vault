@@ -1,8 +1,9 @@
 package com.codevault.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 /**
  * 用户实体类，对应 user 表
@@ -16,6 +17,7 @@ public class User {
     private String username;
 
     /** 密码 */
+    @JsonIgnore
     private String password;
 
     /** 昵称 */
@@ -35,16 +37,16 @@ public class User {
 
     /** 创建时间 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private Date createTime;
+    private LocalDateTime createTime;
 
     /** 更新时间 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private Date updateTime;
+    private LocalDateTime updateTime;
 
     public User() {
     }
 
-    public User(Long id, String username, String password, String nickname, String avatar, String email, String role, Integer status, Date createTime, Date updateTime) {
+    public User(Long id, String username, String password, String nickname, String avatar, String email, String role, Integer status, LocalDateTime createTime, LocalDateTime updateTime) {
         this.id = id;
         this.username = username;
         this.password = password;
@@ -121,19 +123,19 @@ public class User {
         this.status = status;
     }
 
-    public Date getCreateTime() {
+    public LocalDateTime getCreateTime() {
         return createTime;
     }
 
-    public void setCreateTime(Date createTime) {
+    public void setCreateTime(LocalDateTime createTime) {
         this.createTime = createTime;
     }
 
-    public Date getUpdateTime() {
+    public LocalDateTime getUpdateTime() {
         return updateTime;
     }
 
-    public void setUpdateTime(Date updateTime) {
+    public void setUpdateTime(LocalDateTime updateTime) {
         this.updateTime = updateTime;
     }
 }

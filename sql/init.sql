@@ -1,4 +1,4 @@
--- ============================================
+﻿-- ============================================
 -- CodeVault 在线代码片段管理系统 数据库初始化脚本
 -- ============================================
 
@@ -139,6 +139,5 @@ INSERT INTO `tag` (`name`) VALUES
 ('Redis'), ('Docker'), ('Python'), ('JavaScript'), ('Java'),
 ('API'), ('排序'), ('动态规划'), ('Linux'), ('Git');
 
--- 预设管理员账号（密码: admin123，BCrypt加密）
-INSERT INTO `user` (`username`, `password`, `nickname`, `role`) VALUES
-('admin', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iAt6Z5EH', '管理员', 'ADMIN');
+-- 注意：初始部署后请通过注册接口创建管理员账号
+-- 不在初始化脚本中预设管理员密码，避免弱密码风险

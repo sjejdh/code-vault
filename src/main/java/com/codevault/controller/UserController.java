@@ -17,6 +17,7 @@ import jakarta.annotation.Resource;
 
 /**
  * 用户控制器
+ * Controller 层负责将 Service 返回的业务对象包装为统一的 Result<T> 响应
  */
 @Tag(name = "用户模块", description = "用户注册、登录相关接口")
 @Slf4j
@@ -27,27 +28,19 @@ public class UserController {
     @Resource
     private UserService userService;
 
-    /**
-     * 用户注册
-     * @param dto 注册请求参数（带参数校验）
-     * @return 统一响应结果
-     */
     @Operation(summary = "用户注册")
     @PostMapping("/register")
     public Result register(@RequestBody @Validated RegisterDTO dto) {
         log.info("收到注册请求，用户名：{}", dto.getUsername());
-        return userService.register(dto);
+        userService.register(dto);
+        return Result.success("注册成功");
     }
 
-    /**
-     * 用户登录
-     * @param dto 登录请求参数（带参数校验）
-     * @return 统一响应结果（包含token）
-     */
     @Operation(summary = "用户登录")
     @PostMapping("/login")
     public Result login(@RequestBody @Validated LoginDTO dto) {
         log.info("收到登录请求，用户名：{}", dto.getUsername());
-        return userService.login(dto);
+        String token = userService.login(dto);
+        return Result.success("登录成功", token);
     }
 }

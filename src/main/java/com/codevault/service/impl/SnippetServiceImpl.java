@@ -1,11 +1,10 @@
 package com.codevault.service.impl;
 
 import com.codevault.common.exception.BusinessException;
-import com.codevault.common.result.Result;
 import com.codevault.config.HotSnippetCache;
 import com.codevault.dto.SnippetDTO;
 import com.codevault.entity.Snippet;
-import com.codevault.entity.Tag;
+import com.codevault.entity.TagEntity;
 import com.codevault.mapper.SnippetMapper;
 import com.codevault.mapper.TagMapper;
 import com.codevault.service.SnippetService;
@@ -14,7 +13,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.annotation.Resource;
+import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 代码片段业务逻辑实现类
@@ -41,11 +42,11 @@ public class SnippetServiceImpl implements SnippetService {
      *
      * @param userId 当前登录用户ID
      * @param dto    片段数据传输对象
-     * @return 操作结果
+     * @return 创建后的片段对象
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Result createSnippet(Long userId, SnippetDTO dto) {
+    public Snippet createSnippet(Long userId, SnippetDTO dto) {
         // 构造片段实体
         Snippet snippet = new Snippet();
         snippet.setUserId(userId);
@@ -59,8 +60,9 @@ public class SnippetServiceImpl implements SnippetService {
         snippet.setLikeCount(0);
         snippet.setCollectCount(0);
         snippet.setStatus(1);
-        snippet.setCreateTime(new Date());
-        snippet.setUpdateTime(new Date());
+        LocalDateTime now = LocalDateTime.now();
+        snippet.setCreateTime(now);
+        snippet.setUpdateTime(now);
 
         // 插入数据库
         int rows = snippetMapper.insert(snippet);
@@ -75,7 +77,7 @@ public class SnippetServiceImpl implements SnippetService {
         hotSnippetCache.clearCache();
 
         log.info("创建代码片段成功，用户ID：{}，片段ID：{}，标题：{}", userId, snippet.getId(), snippet.getTitle());
-        return Result.success("创建代码片段成功", snippet);
+        return snippet;
     }
 
     /**
@@ -87,11 +89,10 @@ public class SnippetServiceImpl implements SnippetService {
      * @param userId    当前登录用户ID
      * @param snippetId 片段ID
      * @param dto       片段数据传输对象
-     * @return 操作结果
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Result updateSnippet(Long userId, Long snippetId, SnippetDTO dto) {
+    public void updateSnippet(Long userId, Long snippetId, SnippetDTO dto) {
         // 查询并验证片段归属
         Snippet existing = snippetMapper.findById(snippetId);
         if (existing == null || existing.getStatus() == 0) {
@@ -110,7 +111,7 @@ public class SnippetServiceImpl implements SnippetService {
         snippet.setLanguage(dto.getLanguage());
         snippet.setCategoryId(dto.getCategoryId());
         snippet.setIsPublic(dto.getIsPublic());
-        snippet.setUpdateTime(new Date());
+        snippet.setUpdateTime(LocalDateTime.now());
 
         // 执行更新
         int rows = snippetMapper.update(snippet);
@@ -126,7 +127,6 @@ public class SnippetServiceImpl implements SnippetService {
         hotSnippetCache.clearCache();
 
         log.info("更新代码片段成功，用户ID：{}，片段ID：{}", userId, snippetId);
-        return Result.success("更新代码片段成功");
     }
 
     /**
@@ -135,11 +135,10 @@ public class SnippetServiceImpl implements SnippetService {
      *
      * @param userId    当前登录用户ID
      * @param snippetId 片段ID
-     * @return 操作结果
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Result deleteSnippet(Long userId, Long snippetId) {
+    public void deleteSnippet(Long userId, Long snippetId) {
         // 查询并验证片段归属
         Snippet existing = snippetMapper.findById(snippetId);
         if (existing == null || existing.getStatus() == 0) {
@@ -162,7 +161,6 @@ public class SnippetServiceImpl implements SnippetService {
         hotSnippetCache.clearCache();
 
         log.info("删除代码片段成功，用户ID：{}，片段ID：{}", userId, snippetId);
-        return Result.success("删除代码片段成功");
     }
 
     /**
@@ -173,10 +171,10 @@ public class SnippetServiceImpl implements SnippetService {
      * 4. 组装返回
      *
      * @param id 片段ID
-     * @return 包含片段详情和标签的操作结果
+     * @return 片段详情（含标签）
      */
     @Override
-    public Result getSnippetDetail(Long id) {
+    public Snippet getSnippetDetail(Long id) {
         // 查询片段详情
         Snippet snippet = snippetMapper.findById(id);
         if (snippet == null || snippet.getStatus() == 0) {
@@ -192,25 +190,20 @@ public class SnippetServiceImpl implements SnippetService {
         snippetMapper.updateViewCount(id);
 
         // 查询关联标签
-        List<Tag> tagList = tagMapper.findBySnippetId(id);
-        List<String> tagNames = new ArrayList<>();
-        for (Tag tag : tagList) {
-            tagNames.add(tag.getName());
-        }
-        snippet.setTags(tagNames);
+        fillTagsForSnippets(Collections.singletonList(snippet));
 
         // 更新片段的浏览量（返回给前端时显示最新值）
         snippet.setViewCount(snippet.getViewCount() + 1);
 
         log.info("查看代码片段详情，片段ID：{}", id);
-        return Result.success(snippet);
+        return snippet;
     }
 
     /**
      * 分页查询公开片段
      * 1. 计算offset = (page - 1) * pageSize
      * 2. 查询列表和总数
-     * 3. 对每个snippet查询关联标签
+     * 3. 批量查询标签（避免N+1问题）
      * 4. 返回分页数据
      *
      * @param keyword    搜索关键词
@@ -218,31 +211,21 @@ public class SnippetServiceImpl implements SnippetService {
      * @param language   编程语言
      * @param page       页码（从1开始）
      * @param pageSize   每页大小
-     * @return 分页结果
+     * @return 分页数据Map
      */
     @Override
-    public Result getPublicSnippets(String keyword, Long categoryId, String language,
-                                   Integer page, Integer pageSize) {
-        // 设置默认分页参数
+    public Map<String, Object> getPublicSnippets(String keyword, Long categoryId, String language,
+                                                  Integer page, Integer pageSize) {
         int currentPage = (page != null && page > 0) ? page : 1;
         int size = (pageSize != null && pageSize > 0) ? pageSize : 10;
         int offset = (currentPage - 1) * size;
 
-        // 查询列表和总数
         List<Snippet> snippets = snippetMapper.findPublicSnippets(keyword, categoryId, language, offset, size);
         int total = snippetMapper.countPublicSnippets(keyword, categoryId, language);
 
-        // 为每个片段查询关联标签
-        for (Snippet snippet : snippets) {
-            List<Tag> tagList = tagMapper.findBySnippetId(snippet.getId());
-            List<String> tagNames = new ArrayList<>();
-            for (Tag tag : tagList) {
-                tagNames.add(tag.getName());
-            }
-            snippet.setTags(tagNames);
-        }
+        // 批量填充标签（解决N+1查询问题）
+        fillTagsForSnippets(snippets);
 
-        // 组装分页数据
         Map<String, Object> data = new HashMap<>();
         data.put("list", snippets);
         data.put("total", total);
@@ -251,7 +234,7 @@ public class SnippetServiceImpl implements SnippetService {
 
         log.info("分页查询公开片段，关键词：{}，分类：{}，语言：{}，页码：{}，每页：{}，总计：{}",
                 keyword, categoryId, language, currentPage, size, total);
-        return Result.success(data);
+        return data;
     }
 
     /**
@@ -262,29 +245,19 @@ public class SnippetServiceImpl implements SnippetService {
      * @return 热门片段列表
      */
     @Override
-    public Result getHotSnippets(Integer limit) {
+    public List<Snippet> getHotSnippets(Integer limit) {
         int count = (limit != null && limit > 0) ? limit : 10;
 
-        // 先从缓存获取热门片段
         List<Snippet> snippets = hotSnippetCache.getHotSnippets();
-
-        // 根据请求的limit截取返回条数
         if (snippets.size() > count) {
             snippets = snippets.subList(0, count);
         }
 
-        // 为每个片段查询关联标签
-        for (Snippet snippet : snippets) {
-            List<Tag> tagList = tagMapper.findBySnippetId(snippet.getId());
-            List<String> tagNames = new ArrayList<>();
-            for (Tag tag : tagList) {
-                tagNames.add(tag.getName());
-            }
-            snippet.setTags(tagNames);
-        }
+        // 批量填充标签（解决N+1查询问题）
+        fillTagsForSnippets(snippets);
 
         log.info("查询热门片段，条数：{}", count);
-        return Result.success(snippets);
+        return snippets;
     }
 
     /**
@@ -293,30 +266,20 @@ public class SnippetServiceImpl implements SnippetService {
      * @param userId   用户ID
      * @param page     页码（从1开始）
      * @param pageSize 每页大小
-     * @return 分页结果
+     * @return 分页数据Map
      */
     @Override
-    public Result getUserSnippets(Long userId, Integer page, Integer pageSize) {
-        // 设置默认分页参数
+    public Map<String, Object> getUserSnippets(Long userId, Integer page, Integer pageSize) {
         int currentPage = (page != null && page > 0) ? page : 1;
         int size = (pageSize != null && pageSize > 0) ? pageSize : 10;
         int offset = (currentPage - 1) * size;
 
-        // 查询列表和总数
         List<Snippet> snippets = snippetMapper.findByUserId(userId, offset, size);
         int total = snippetMapper.countByUserId(userId);
 
-        // 为每个片段查询关联标签
-        for (Snippet snippet : snippets) {
-            List<Tag> tagList = tagMapper.findBySnippetId(snippet.getId());
-            List<String> tagNames = new ArrayList<>();
-            for (Tag tag : tagList) {
-                tagNames.add(tag.getName());
-            }
-            snippet.setTags(tagNames);
-        }
+        // 批量填充标签（解决N+1查询问题）
+        fillTagsForSnippets(snippets);
 
-        // 组装分页数据
         Map<String, Object> data = new HashMap<>();
         data.put("list", snippets);
         data.put("total", total);
@@ -324,7 +287,40 @@ public class SnippetServiceImpl implements SnippetService {
         data.put("pageSize", size);
 
         log.info("查询用户片段，用户ID：{}，页码：{}，每页：{}，总计：{}", userId, currentPage, size, total);
-        return Result.success(data);
+        return data;
+    }
+
+    /**
+     * 批量填充片段的标签列表（解决N+1查询问题）
+     * 一次查询所有片段的关联标签，然后在内存中按snippetId分组装配
+     *
+     * @param snippets 需要填充标签的片段列表
+     */
+    private void fillTagsForSnippets(List<Snippet> snippets) {
+        if (snippets == null || snippets.isEmpty()) {
+            return;
+        }
+
+        // 提取所有片段ID
+        List<Long> snippetIds = snippets.stream()
+                .map(Snippet::getId)
+                .collect(Collectors.toList());
+
+        // 批量查询所有标签关联
+        List<Map<String, Object>> tagRelations = tagMapper.findBySnippetIds(snippetIds);
+
+        // 按 snippetId 分组
+        Map<Long, List<String>> tagMap = new HashMap<>();
+        for (Map<String, Object> relation : tagRelations) {
+            Long snippetId = ((Number) relation.get("snippetId")).longValue();
+            String tagName = (String) relation.get("tagName");
+            tagMap.computeIfAbsent(snippetId, k -> new ArrayList<>()).add(tagName);
+        }
+
+        // 为每个片段设置标签列表
+        for (Snippet snippet : snippets) {
+            snippet.setTags(tagMap.getOrDefault(snippet.getId(), new ArrayList<>()));
+        }
     }
 
     /**
@@ -339,21 +335,18 @@ public class SnippetServiceImpl implements SnippetService {
         }
 
         for (String tagName : tagNames) {
-            // 去除空白标签名
             String trimmedName = tagName.trim();
             if (trimmedName.isEmpty()) {
                 continue;
             }
 
-            // 查找标签，不存在则创建
-            Tag tag = tagMapper.findByName(trimmedName);
+            TagEntity tag = tagMapper.findByName(trimmedName);
             if (tag == null) {
-                tag = new Tag();
+                tag = new TagEntity();
                 tag.setName(trimmedName);
                 tagMapper.insert(tag);
             }
 
-            // 插入片段-标签关联
             tagMapper.insertSnippetTag(snippetId, tag.getId());
         }
     }
