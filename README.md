@@ -4,6 +4,17 @@
 
 ---
 
+## 项目预览
+
+<table>
+<tr>
+<td><img src="docs/images/homepage.png" alt="首页" width="480"/></td>
+<td><img src="docs/images/detail.png" alt="片段详情" width="480"/></td>
+</tr>
+</table>
+
+---
+
 ## 技术栈
 
 | 技术                      | 版本      | 作用                       |
