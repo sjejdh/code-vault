@@ -5,7 +5,7 @@ import com.codevault.common.result.Result;
 import com.codevault.entity.Collection;
 import com.codevault.entity.Like;
 import com.codevault.entity.Snippet;
-import com.codevault.entity.TagEntity;
+import com.codevault.entity.SnippetTagRelation;
 import com.codevault.mapper.CollectionMapper;
 import com.codevault.mapper.LikeMapper;
 import com.codevault.mapper.SnippetMapper;
@@ -181,12 +181,12 @@ public class InteractionController {
                 .map(Snippet::getId)
                 .collect(Collectors.toList());
 
-        List<Map<String, Object>> tagRelations = tagMapper.findBySnippetIds(snippetIds);
+        List<SnippetTagRelation> tagRelations = tagMapper.findBySnippetIds(snippetIds);
 
         Map<Long, List<String>> tagMap = new HashMap<>();
-        for (Map<String, Object> relation : tagRelations) {
-            Long snippetId = ((Number) relation.get("snippetId")).longValue();
-            String tagName = (String) relation.get("tagName");
+        for (SnippetTagRelation relation : tagRelations) {
+            Long snippetId = relation.getSnippetId();
+            String tagName = relation.getTagName();
             tagMap.computeIfAbsent(snippetId, k -> new ArrayList<>()).add(tagName);
         }
 

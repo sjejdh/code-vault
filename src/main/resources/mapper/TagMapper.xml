@@ -64,7 +64,7 @@
     </delete>
 
     <!-- 批量查询多个片段关联的标签 -->
-    <select id="findBySnippetIds" resultType="java.util.Map">
+    <select id="findBySnippetIds" resultType="com.codevault.entity.SnippetTagRelation">
         SELECT st.snippet_id AS snippetId, t.id AS tagId, t.name AS tagName
         FROM snippet_tag st
         INNER JOIN tag t ON st.tag_id = t.id

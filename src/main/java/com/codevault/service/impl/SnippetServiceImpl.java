@@ -4,6 +4,7 @@ import com.codevault.common.exception.BusinessException;
 import com.codevault.config.HotSnippetCache;
 import com.codevault.dto.SnippetDTO;
 import com.codevault.entity.Snippet;
+import com.codevault.entity.SnippetTagRelation;
 import com.codevault.entity.TagEntity;
 import com.codevault.mapper.SnippetMapper;
 import com.codevault.mapper.TagMapper;
@@ -307,13 +308,13 @@ public class SnippetServiceImpl implements SnippetService {
                 .collect(Collectors.toList());
 
         // 批量查询所有标签关联
-        List<Map<String, Object>> tagRelations = tagMapper.findBySnippetIds(snippetIds);
+        List<SnippetTagRelation> tagRelations = tagMapper.findBySnippetIds(snippetIds);
 
         // 按 snippetId 分组
         Map<Long, List<String>> tagMap = new HashMap<>();
-        for (Map<String, Object> relation : tagRelations) {
-            Long snippetId = ((Number) relation.get("snippetId")).longValue();
-            String tagName = (String) relation.get("tagName");
+        for (SnippetTagRelation relation : tagRelations) {
+            Long snippetId = relation.getSnippetId();
+            String tagName = relation.getTagName();
             tagMap.computeIfAbsent(snippetId, k -> new ArrayList<>()).add(tagName);
         }
 

@@ -5,7 +5,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
-import java.util.Map;
+import com.codevault.entity.SnippetTagRelation;
 
 /**
  * 标签数据访问层接口
@@ -68,5 +68,5 @@ public interface TagMapper {
      * @param snippetIds 代码片段ID列表
      * @return 标签列表（每条记录包含 snippet_id 和 tag 信息）
      */
-    List<Map<String, Object>> findBySnippetIds(@Param("snippetIds") List<Long> snippetIds);
+    List<SnippetTagRelation> findBySnippetIds(@Param("snippetIds") List<Long> snippetIds);
 }

@@ -61,6 +61,9 @@ public class WebConfig implements WebMvcConfigurer {
                         "/api/user/login",       // 登录接口
                         "/api/user/register",    // 注册接口
                         "/api/snippet/public/**",// 公开的代码片段查询接口
+                        "/api/snippet/detail/**",// 公开的代码片段详情接口
+                        "/api/category/**",      // 公开的分类列表接口
+                        "/api/tag/**",           // 公开的标签列表接口
                         // Swagger 接口文档相关路径
                         "/swagger-ui.html",
                         "/swagger-ui/**",

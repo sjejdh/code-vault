@@ -158,9 +158,9 @@ services:
 (1, 'Linux Shell 监控脚本', '使用 psutil 库定期采集系统资源指标，配合 Prometheus + Grafana 可视化', '#!/bin/bash
 # 系统资源监控脚本
 
-CPU_USAGE=$(top -bn1 | grep "Cpu(s)" | awk "{print $2}" | cut -d'%' -f1)
+CPU_USAGE=$(top -bn1 | grep "Cpu(s)" | awk "{print $2}" | cut -d\'%\' -f1)
 MEM_USAGE=$(free | grep Mem | awk "{printf \"%.2f\", $3/$2 * 100.0}")
-DISK_USAGE=$(df -h / | tail -1 | awk "{print $5}" | cut -d'%' -f1)
+DISK_USAGE=$(df -h / | tail -1 | awk "{print $5}" | cut -d\'%\' -f1)
 
 echo "CPU: ${CPU_USAGE}%"
 echo "Memory: ${MEM_USAGE}%"
