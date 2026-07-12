@@ -5,8 +5,8 @@
 <!-- 收藏Mapper XML映射文件 -->
 <mapper namespace="com.codevault.mapper.CollectionMapper">
 
-    <!-- 结果映射：将数据库字段映射到Collection实体类属性 -->
-    <resultMap id="collectionResultMap" type="com.codevault.entity.Collection">
+    <!-- 结果映射：将数据库字段映射到UserCollection实体类属性 -->
+    <resultMap id="collectionResultMap" type="com.codevault.entity.UserCollection">
         <id property="id" column="id"/>
         <result property="userId" column="user_id"/>
         <result property="snippetId" column="snippet_id"/>
@@ -32,7 +32,7 @@
     </resultMap>
 
     <!-- 新增收藏记录 -->
-    <insert id="insert" parameterType="com.codevault.entity.Collection" useGeneratedKeys="true" keyProperty="id">
+    <insert id="insert" parameterType="com.codevault.entity.UserCollection" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO collection (user_id, snippet_id, create_time)
         VALUES (#{userId}, #{snippetId}, #{createTime})
     </insert>

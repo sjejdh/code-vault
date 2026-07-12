@@ -1,6 +1,6 @@
 package com.codevault.mapper;
 
-import com.codevault.entity.Collection;
+import com.codevault.entity.UserCollection;
 import com.codevault.entity.Snippet;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -19,7 +19,7 @@ public interface CollectionMapper {
      * @param collection 收藏实体
      * @return 影响行数
      */
-    int insert(Collection collection);
+    int insert(UserCollection collection);
 
     /**
      * 查询用户是否已收藏指定片段
@@ -27,7 +27,7 @@ public interface CollectionMapper {
      * @param snippetId 片段ID
      * @return 收藏记录（未收藏则返回null）
      */
-    Collection findByUserAndSnippet(@Param("userId") Long userId, @Param("snippetId") Long snippetId);
+    UserCollection findByUserAndSnippet(@Param("userId") Long userId, @Param("snippetId") Long snippetId);
 
     /**
      * 取消收藏（根据用户ID和片段ID删除）

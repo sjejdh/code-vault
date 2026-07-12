@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Collection {
+public class UserCollection {
 
     /** 主键ID */
     private Long id;

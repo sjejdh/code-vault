@@ -2,7 +2,7 @@ package com.codevault.controller;
 
 import com.codevault.common.exception.BusinessException;
 import com.codevault.common.result.Result;
-import com.codevault.entity.Collection;
+import com.codevault.entity.UserCollection;
 import com.codevault.entity.Like;
 import com.codevault.entity.Snippet;
 import com.codevault.entity.SnippetTagRelation;
@@ -105,12 +105,12 @@ public class InteractionController {
             throw new BusinessException("代码片段不存在");
         }
 
-        Collection existing = collectionMapper.findByUserAndSnippet(userId, snippetId);
+        UserCollection existing = collectionMapper.findByUserAndSnippet(userId, snippetId);
         if (existing != null) {
             throw new BusinessException("已收藏，请勿重复操作");
         }
 
-        Collection collection = new Collection();
+        UserCollection collection = new UserCollection();
         collection.setUserId(userId);
         collection.setSnippetId(snippetId);
         collection.setCreateTime(LocalDateTime.now());
@@ -129,7 +129,7 @@ public class InteractionController {
                                   @PathVariable Long snippetId) {
         Long userId = (Long) request.getAttribute("userId");
 
-        Collection existing = collectionMapper.findByUserAndSnippet(userId, snippetId);
+        UserCollection existing = collectionMapper.findByUserAndSnippet(userId, snippetId);
         if (existing == null) {
             throw new BusinessException("尚未收藏");
         }
