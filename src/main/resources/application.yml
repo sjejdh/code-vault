@@ -10,6 +10,13 @@ spring:
   application:
     name: code-vault
 
+  # 强制 HTTP 响应使用 UTF-8 编码
+  http:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+
 # JWT 配置（各环境共用）
 # 密钥至少 256 位（32字节）以满足 HS256 要求
 jwt:
