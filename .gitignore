@@ -25,9 +25,8 @@ Thumbs.db
 # 测试输出
 /test-output/
 
-# 本地配置（如果包含敏感信息）
-# application-local.yml
-# application-dev.yml
+# 本地配置（包含敏感信息：API Key 等）
+application-ai.yml
 
 # Docker 构建产物
 *.tar

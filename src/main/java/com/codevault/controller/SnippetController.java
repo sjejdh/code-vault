@@ -2,6 +2,7 @@ package com.codevault.controller;
 
 import com.codevault.common.result.Result;
 import com.codevault.dto.SnippetDTO;
+import com.codevault.service.AiService;
 import com.codevault.service.SnippetService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -30,6 +31,9 @@ public class SnippetController {
     @Resource
     private SnippetService snippetService;
 
+    @Resource
+    private AiService aiService;
+
     @Operation(summary = "分页查询公开片段")
     @GetMapping("/public")
     public Result getPublicSnippets(
@@ -56,6 +60,18 @@ public class SnippetController {
     public Result getSnippetDetail(@PathVariable Long id) {
         log.info("查看公开片段详情，片段ID：{}", id);
         return Result.success(snippetService.getSnippetDetail(id));
+    }
+
+    @Operation(summary = "AI 解释代码片段")
+    @GetMapping("/public/{id}/explain")
+    public Result explainCode(@PathVariable Long id) {
+        log.info("AI 解释代码片段，片段ID：{}", id);
+        var snippet = snippetService.getSnippetDetail(id);
+        if (snippet == null) {
+            return Result.error("代码片段不存在");
+        }
+        String explanation = aiService.explainCode(id, snippet.getContent(), snippet.getLanguage());
+        return Result.success(explanation);
     }
 
     @Operation(summary = "查询我的片段")
