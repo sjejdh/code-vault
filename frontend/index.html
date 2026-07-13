@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CodeVault - 代码片段管理平台</title>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{font-size:16px;scroll-behavior:smooth}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei','PingFang SC',sans-serif;background:#0d1117;color:#c9d1d9;line-height:1.6;min-height:100vh}
+a{color:#58a6ff;text-decoration:none}
+::-webkit-scrollbar{width:8px}
+::-webkit-scrollbar-track{background:#161b22}
+::-webkit-scrollbar-thumb{background:#30363d;border-radius:4px}
+.app-container{display:flex;flex-direction:column;min-height:100vh}
+.main-wrap{display:flex;flex:1}
+.main-content{flex:1;min-width:0;padding:24px}
+.sidebar{width:280px;flex-shrink:0;padding:24px;border-left:1px solid #21262d}
+.navbar{background:#161b22;border-bottom:1px solid #21262d;padding:0 24px;height:64px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:100}
+.nav-logo{font-family:Consolas,'Courier New',monospace;font-weight:700;font-size:1.3rem;color:#3fb950;cursor:pointer;white-space:nowrap}
+.nav-search{flex:1;max-width:400px;position:relative}
+.nav-search input{width:100%;background:#0d1117;border:1px solid #30363d;color:#c9d1d9;padding:6px 12px 6px 36px;border-radius:6px;font-size:14px;font-family:inherit;outline:none}
+.nav-search input:focus{border-color:#3fb950}
+.nav-search input::placeholder{color:#484f58}
+.nav-search .si{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#484f58}
+.nav-links{display:flex;gap:4px;align-items:center}
+.nav-link{padding:6px 12px;border-radius:6px;font-size:14px;color:#c9d1d9;cursor:pointer}
+.nav-link:hover{background:#30363d}
+.nav-link.active{color:#fff;background:#21262d}
+.nav-auth{display:flex;gap:8px;align-items:center;margin-left:auto}
+.btn{padding:6px 16px;border-radius:6px;font-size:14px;font-family:inherit;font-weight:500;cursor:pointer;border:1px solid transparent;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.btn-primary{background:#238636;color:#fff;border-color:#2ea043}
+.btn-primary:hover{background:#2ea043}
+.btn-outline{background:transparent;color:#c9d1d9;border-color:#30363d}
+.btn-outline:hover{background:#30363d}
+.btn-danger{background:#da3633;color:#fff;border-color:#f85149}
+.btn-danger:hover{background:#f85149}
+.btn-sm{padding:4px 10px;font-size:12px}
+.btn-ghost{background:transparent;color:#c9d1d9;border:none}
+.btn-ghost:hover{background:#30363d}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.user-menu{display:flex;align-items:center;gap:8px;cursor:pointer;padding:4px 8px;border-radius:6px;position:relative}
+.user-menu:hover{background:#30363d}
+.user-avatar{width:28px;height:28px;border-radius:50%;background:#30363d;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#3fb950}
+.user-dropdown{position:absolute;top:100%;right:0;background:#1c2128;border:1px solid #30363d;border-radius:8px;padding:4px;min-width:160px;box-shadow:0 8px 24px rgba(0,0,0,.4);display:none;z-index:200}
+.user-dropdown.show{display:block}
+.user-dropdown-item{padding:8px 12px;border-radius:6px;font-size:14px;cursor:pointer;color:#c9d1d9}
+.user-dropdown-item:hover{background:#30363d}
+.user-dropdown-item.danger{color:#f85149}
+.filter-bar{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.filter-bar select{background:#161b22;border:1px solid #30363d;color:#c9d1d9;padding:6px 12px;border-radius:6px;font-size:14px;font-family:inherit;outline:none}
+.snippet-list{display:flex;flex-direction:column;gap:12px}
+.snippet-card{background:#161b22;border:1px solid #21262d;border-radius:8px;padding:16px 20px;cursor:pointer}
+.snippet-card:hover{border-color:#30363d}
+.snippet-card-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px}
+.snippet-card-title{font-size:16px;font-weight:600;color:#e6edf3;cursor:pointer}
+.snippet-card-title:hover{color:#58a6ff}
+.snippet-card-lang{font-size:12px;padding:2px 8px;border-radius:12px;background:#0d1117;font-family:Consolas,'Courier New',monospace;border:1px solid #21262d;flex-shrink:0}
+.snippet-card-desc{font-size:13px;color:#8b949e;margin-bottom:10px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.snippet-card-meta{display:flex;gap:16px;font-size:12px;color:#8b949e;align-items:center}
+.snippet-card-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.tag{font-size:12px;padding:2px 8px;border-radius:12px;background:#1c2128;color:#8b949e;border:1px solid #21262d}
+.code-preview{margin-top:12px;background:#0d1117;border:1px solid #21262d;border-radius:6px;padding:12px 16px;font-family:Consolas,monospace;font-size:13px;line-height:1.5;overflow-x:auto;display:none;white-space:pre;max-height:300px;overflow-y:auto}
+.code-preview.open{display:block}
+.code-block{background:#0d1117;border:1px solid #21262d;border-radius:6px;padding:16px;font-family:Consolas,monospace;font-size:13px;line-height:1.6;overflow-x:auto;white-space:pre;tab-size:4}
+.kw{color:#ff7b72}.str{color:#a5d6ff}.cm{color:#8b949e;font-style:italic}.fn{color:#d2a8ff}.num{color:#79c0ff}
+.detail-page{max-width:900px}
+.detail-title{font-size:28px;font-weight:700;color:#e6edf3;margin-bottom:8px}
+.detail-meta{font-size:13px;color:#8b949e;display:flex;gap:16px;flex-wrap:wrap}
+.detail-stats{display:flex;gap:24px;margin:20px 0;padding:16px 0;border-top:1px solid #21262d;border-bottom:1px solid #21262d}
+.stat-item{display:flex;align-items:center;gap:6px;font-size:14px;color:#8b949e}
+.stat-item .count{color:#e6edf3;font-weight:600}
+.detail-actions{display:flex;gap:8px;margin-bottom:20px}
+.ai-explain-panel{margin-top:16px;background:#0d1117;border:1px solid #21262d;border-radius:6px;padding:16px;display:none}
+.ai-explain-panel.open{display:block}
+.ai-explain-header{display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:14px;font-weight:600;color:#a371f7}
+.ai-explain-content{font-size:13px;line-height:1.7;color:#c9d1d9;white-space:pre-wrap}
+.sidebar-section{margin-bottom:24px}
+.sidebar-title{font-size:14px;font-weight:600;color:#e6edf3;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #21262d}
+.hot-list{display:flex;flex-direction:column;gap:8px}
+.hot-item{display:flex;align-items:center;gap:10px;padding:6px 0;cursor:pointer;font-size:13px}
+.hot-item:hover .hot-item-title{color:#58a6ff}
+.hot-rank{font-family:Consolas,monospace;font-weight:700;font-size:14px;color:#484f58;min-width:20px}
+.hot-rank.top3{color:#3fb950}
+.hot-item-title{color:#c9d1d9;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hot-item-views{color:#484f58;font-size:12px;white-space:nowrap}
+.pagination{display:flex;align-items:center;justify-content:center;gap:4px;margin-top:24px}
+.page-btn{padding:4px 10px;border-radius:6px;font-size:13px;cursor:pointer;background:transparent;color:#c9d1d9;border:1px solid transparent;font-family:inherit}
+.page-btn:hover{background:#30363d}
+.page-btn.active{background:#21262d;border-color:#30363d;color:#e6edf3}
+.page-btn:disabled{opacity:.3;cursor:not-allowed}
+.page-info{font-size:13px;color:#8b949e;margin:0 8px}
+.auth-page{max-width:400px;margin:40px auto}
+.auth-card{background:#161b22;border:1px solid #21262d;border-radius:12px;padding:32px}
+.auth-tabs{display:flex;border-bottom:1px solid #21262d;margin-bottom:24px}
+.auth-tab{flex:1;padding:10px;text-align:center;font-size:14px;font-weight:500;color:#8b949e;cursor:pointer;border-bottom:2px solid transparent}
+.auth-tab.active{color:#e6edf3;border-bottom-color:#3fb950}
+.auth-tab:hover{color:#c9d1d9}
+.form-group{margin-bottom:16px}
+.form-label{display:block;font-size:13px;font-weight:500;color:#c9d1d9;margin-bottom:6px}
+.form-input{width:100%;background:#0d1117;border:1px solid #30363d;color:#e6edf3;padding:8px 12px;border-radius:6px;font-size:14px;font-family:inherit;outline:none}
+.form-input:focus{border-color:#3fb950}
+.form-input::placeholder{color:#484f58}
+.form-hint{font-size:12px;color:#484f58;margin-top:4px}
+textarea.form-input{font-family:Consolas,monospace;resize:vertical;min-height:200px}
+.toggle-group{display:flex;align-items:center;gap:10px}
+.toggle-switch{position:relative;width:40px;height:22px;background:#30363d;border-radius:11px;cursor:pointer;transition:background .2s;flex-shrink:0}
+.toggle-switch.active{background:#238636}
+.toggle-switch::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;background:#e6edf3;border-radius:50%;transition:transform .2s}
+.toggle-switch.active::after{transform:translateX(18px)}
+.toggle-label{font-size:13px;color:#8b949e}
+.tag-input-wrap{background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:6px 8px;display:flex;flex-wrap:wrap;gap:6px;min-height:40px;align-items:center}
+.tag-input-wrap:focus-within{border-color:#3fb950}
+.tag-input-tag{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;background:#1c2128;color:#c9d1d9;border-radius:12px;font-size:12px;border:1px solid #30363d}
+.tag-input-tag .remove-tag{cursor:pointer;color:#8b949e;font-size:14px}
+.tag-input-tag .remove-tag:hover{color:#f85149}
+.tag-input-field{border:none;background:transparent;color:#e6edf3;font-size:13px;font-family:inherit;outline:none;flex:1;min-width:80px}
+.tag-input-field::placeholder{color:#484f58}
+.empty-state{text-align:center;padding:60px 20px;color:#484f58}
+.empty-state .title{font-size:18px;font-weight:600;color:#8b949e;margin-bottom:8px}
+.empty-state .desc{font-size:14px}
+.toast-container{position:fixed;top:80px;right:24px;z-index:1000;display:flex;flex-direction:column;gap:8px}
+.toast{padding:12px 20px;border-radius:8px;font-size:14px;box-shadow:0 4px 16px rgba(0,0,0,.3);animation:toastIn .3s ease;max-width:360px}
+.toast.success{background:#1c3a2a;color:#3fb950;border:1px solid #238636}
+.toast.error{background:#3d1414;color:#f85149;border:1px solid #da3633}
+.toast.info{background:#1c2533;color:#58a6ff;border:1px solid #1f6feb}
+@keyframes toastIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+.loading{text-align:center;padding:40px;color:#8b949e}
+.spinner{display:inline-block;width:24px;height:24px;border:2px solid #30363d;border-top-color:#3fb950;border-radius:50%;animation:spin .6s linear infinite;margin-bottom:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.snippet-card-footer{display:flex;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid #21262d}
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.page-title{font-size:20px;font-weight:700;color:#e6edf3}
+.back-link{font-size:13px;color:#8b949e;margin-bottom:16px;cursor:pointer}
+.back-link:hover{color:#58a6ff}
+.private-badge{font-size:11px;padding:1px 6px;border-radius:4px;background:#3d2e00;color:#d29922;margin-left:8px}
+@media(max-width:900px){.sidebar{display:none}}
+@media(max-width:768px){.navbar{padding:0 12px;gap:8px}.nav-search{max-width:none}.nav-links{display:none}.main-content{padding:16px}.filter-bar{flex-direction:column}.filter-bar select{width:100%}.snippet-card{padding:12px 16px}.page-header{flex-direction:column;align-items:flex-start;gap:12px}}
+</style>
+</head>
+<body>
+<div class="app-container" id="app">
+<nav class="navbar" id="navbar"></nav>
+<div class="main-wrap">
+<main class="main-content" id="main-content"></main>
+<aside class="sidebar" id="sidebar"></aside>
+</div>
+<div class="toast-container" id="toast-container"></div>
+</div>
+<script>
+var API_BASE='http://localhost:8080';
+var PAGE_SIZE=10;
+var LANGUAGES=['Java','Python','JavaScript','TypeScript','Go','Rust','C','C++','SQL','Shell','Other'];
+var currentUser=null;
+var categories=[];
+
+function getToken(){return currentUser?currentUser.token:null}
+function isLoggedIn(){return !!currentUser}
+function saveUser(u){currentUser=u;try{localStorage.setItem('cv_user',JSON.stringify(u))}catch(e){}}
+function loadUser(){try{var s=localStorage.getItem('cv_user');if(s)currentUser=JSON.parse(s)}catch(e){currentUser=null}}
+function clearUser(){currentUser=null;localStorage.removeItem('cv_user')}
+
+function req(method,path,body){
+  var o={method:method,headers:{}};
+  if(body!==undefined){o.headers['Content-Type']='application/json';o.body=JSON.stringify(body)}
+  var t=getToken();if(t)o.headers['Authorization']='Bearer '+t;
+  return fetch(API_BASE+path,o).then(function(r){return r.json()}).then(function(j){if(j.code!==200)throw new Error(j.message||'请求失败');return j.data});
+}
+
+function toast(msg,type){
+  type=type||'info';
+  var c=document.getElementById('toast-container');
+  var el=document.createElement('div');
+  el.className='toast '+type;el.textContent=msg;c.appendChild(el);
+  setTimeout(function(){el.style.opacity='0';el.style.transition='opacity .3s';setTimeout(function(){el.remove()},300)},3000);
+}
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+function hl(code,lang){
+  var h=esc(code);
+  h=h.replace(/(\/\/.*$|#(?!\{)[^\n]*)/gm,'<span class="cm">$1</span>');
+  h=h.replace(/(\/\*[\s\S]*?\*\/)/g,'<span class="cm">$1</span>');
+  h=h.replace(/\b(\d+\.?\d*)\b/g,'<span class="num">$1</span>');
+  var kws={
+    java:/\b(abstract|boolean|break|byte|case|catch|char|class|const|continue|default|do|double|else|enum|extends|final|finally|float|for|if|implements|import|instanceof|int|interface|long|new|package|private|protected|public|return|short|static|super|switch|this|throw|throws|try|void|while|true|false|null)\b/g,
+    python:/\b(and|as|class|continue|def|del|elif|else|except|finally|for|from|if|import|in|is|lambda|not|or|pass|raise|return|try|while|with|yield|True|False|None|self)\b/g,
+    javascript:/\b(break|case|catch|class|const|continue|default|do|else|export|extends|false|finally|for|function|if|import|in|let|new|null|of|return|static|super|switch|this|throw|true|try|typeof|var|void|while|yield|async|await)\b/g,
+    go:/\b(break|case|chan|const|continue|default|defer|else|for|func|go|goto|if|import|interface|map|package|range|return|select|struct|switch|type|var|true|false|nil)\b/g,
+    rust:/\b(as|break|const|continue|crate|else|enum|extern|fn|for|if|impl|in|let|loop|match|mod|move|mut|pub|return|self|static|struct|trait|type|unsafe|use|while|true|false)\b/g
+  };
+  var k=(kws[(lang||'').toLowerCase()])||/\b(break|case|catch|class|const|continue|default|do|else|extends|final|finally|for|function|if|import|in|let|new|package|private|protected|public|return|static|super|switch|this|throw|try|typeof|var|void|while|true|false|null|undefined)\b/g;
+  h=h.replace(k,'<span class="kw">$1</span>');
+  h=h.replace(/\b([a-zA-Z_]\w*)\s*(?=\()/g,'<span class="fn">$1</span>');
+  return h;
+}
+
+function langS(lang){
+  var c={Java:'#b07219',Python:'#3572A5',JavaScript:'#f1e05a',TypeScript:'#3178c6',Go:'#00ADD8',Rust:'#dea584',C:'#555','C++':'#f34b7d',SQL:'#e38c00',Shell:'#89e051',Other:'#8b949e'};
+  var v=c[lang]||'#8b949e';
+  return 'color:'+v+';border-color:'+v+'33;background:'+v+'11;';
+}
+
+var curRoute='';
+function nav(r){window.location.hash='#'+r}
+function getR(){return window.location.hash.slice(1)||'/'}
+
+function doRoute(){
+  var r=getR();
+  if(r!==curRoute){curRoute=r;renderPage(r)}
+  renderNav();
+}
+window.addEventListener('hashchange',doRoute);
+
+function renderNav(){
+  var nav=document.getElementById('navbar');
+  var r=getR();
+  var ps=r.indexOf('?')>0?r.split('?')[1]:'';
+  var sv=new URLSearchParams(ps).get('keyword')||'';
+  var isHome=/^\/$/.test(r)||/^\/\?/.test(r);
+  var isMy=/^\/my/.test(r)||/^\/create/.test(r)||/^\/edit/.test(r);
+  var isCol=/^\/collections/.test(r);
+  nav.innerHTML='<div class="nav-logo" onclick="nav(\'/\')">&#60;/&#62; CodeVault</div>'+
+    '<div class="nav-search"><span class="si" style="position:absolute;left:10px;top:50%;transform:translateY(-50%)">&#128269;</span>'+
+    '<input type="text" placeholder="搜索代码片段..." value="'+esc(sv)+'" onkeydown="if(event.key===\'Enter\')nav(\'/?keyword=\'+encodeURIComponent(this.value))"/></div>'+
+    '<div class="nav-links"><div class="nav-link '+(isHome?'active':'')+'" onclick="nav(\'/\')">首页</div>'+
+    (isLoggedIn()?'<div class="nav-link '+(isMy?'active':'')+'" onclick="nav(\'/my\')">我的片段</div><div class="nav-link '+(isCol?'active':'')+'" onclick="nav(\'/collections\')">我的收藏</div>':'')+
+    '</div><div class="nav-auth">'+(isLoggedIn()?
+      '<div class="user-menu" onclick="toggleDD(event)"><div class="user-avatar">'+esc(currentUser.username.charAt(0).toUpperCase())+'</div><span style="font-size:14px">'+esc(currentUser.username)+'</span><div class="user-dropdown" id="udd"><div class="user-dropdown-item" onclick="nav(\'/my\');event.stopPropagation()">我的片段</div><div class="user-dropdown-item" onclick="nav(\'/collections\');event.stopPropagation()">我的收藏</div><div class="user-dropdown-item danger" onclick="doLogout();event.stopPropagation()">退出登录</div></div></div>'
+      :'<button class="btn btn-outline" onclick="nav(\'/login\')">登录</button><button class="btn btn-primary" onclick="nav(\'/register\')">注册</button>')+'</div>';
+}
+
+function toggleDD(e){e.stopPropagation();var d=document.getElementById('udd');if(d)d.classList.toggle('show')}
+document.addEventListener('click',function(){var d=document.getElementById('udd');if(d)d.classList.remove('show')});
+
+function renderPage(route){
+  var main=document.getElementById('main-content');
+  var sb=document.getElementById('sidebar');
+  sb.innerHTML='';
+  var path=route.split('?')[0];
+  var qs=route.indexOf('?')>0?route.substring(route.indexOf('?')):'';
+  var params=new URLSearchParams(qs);
+  if(path==='/'||path==='/hot'){renderHome(main,sb,params)}
+  else if(/^\/snippet\/\d+$/.test(path)){renderDetail(main,path.split('/')[2])}
+  else if(path==='/login'||path==='/register'){renderAuth(main,path==='/register'?'register':'login')}
+  else if(path==='/my'){if(!isLoggedIn()){nav('/login');return}renderMySnippets(main,params)}
+  else if(path==='/create'){if(!isLoggedIn()){nav('/login');return}renderEditor(main,null)}
+  else if(/^\/edit\/\d+$/.test(path)){if(!isLoggedIn()){nav('/login');return}renderEditor(main,path.split('/')[2])}
+  else if(path==='/collections'){if(!isLoggedIn()){nav('/login');return}renderCollections(main,params)}
+  else{main.innerHTML='<div class="empty-state"><div class="title">404</div><div class="desc">页面不存在</div></div>'}
+}
+
+function renderHome(main,sb,params){
+  main.innerHTML='<div class="loading"><div class="spinner"></div><br>加载中...</div>';
+  sb.innerHTML='<div class="loading"><div class="spinner"></div><br>加载热门...</div>';
+  var kw=params.get('keyword')||'',catId=params.get('categoryId')||'',lang=params.get('language')||'',pg=params.get('page')||'1';
+  if(!categories.length){req('GET','/api/category').then(function(c){categories=c}).catch(function(){categories=[]})}
+  Promise.all([
+    req('GET','/api/snippet/public?keyword='+encodeURIComponent(kw)+'&categoryId='+catId+'&language='+encodeURIComponent(lang)+'&page='+pg+'&pageSize='+PAGE_SIZE),
+    req('GET','/api/snippet/public/hot?limit=10')
+  ]).then(function(res){
+    var sn=res[0],hot=res[1]||[],list=(sn&&sn.list)||[],total=(sn&&sn.total)||0,curPg=(sn&&sn.page)||1,totPg=Math.ceil(total/PAGE_SIZE);
+    var fH='<div class="filter-bar"><select onchange="applyF(\'categoryId\',this.value)"><option value="">全部分类</option>'+categories.map(function(c){return'<option value="'+c.id+'" '+(catId==c.id?'selected':'')+'>'+esc(c.name)+'</option>'}).join('')+'</select><select onchange="applyF(\'language\',this.value)"><option value="">全部语言</option>'+LANGUAGES.map(function(l){return'<option value="'+l+'" '+(lang===l?'selected':'')+'>'+l+'</option>'}).join('')+'</select></div>';
+    var lH=!list.length?'<div class="empty-state"><div class="title">暂无代码片段</div><div class="desc">试试其他搜索条件或创建一个新片段</div></div>':'<div class="snippet-list">'+list.map(sCard).join('')+'</div>';
+    var pH=pag(curPg,totPg,function(p){var q=new URLSearchParams();if(kw)q.set('keyword',kw);if(catId)q.set('categoryId',catId);if(lang)q.set('language',lang);q.set('page',p);return'/?'+q.toString()});
+    main.innerHTML=fH+lH+pH;
+    var hH='';if(hot.length){hH='<div class="sidebar-section"><div class="sidebar-title">&#128293; 热门片段 Top '+hot.length+'</div><div class="hot-list">'+hot.map(function(h,i){return'<div class="hot-item" onclick="nav(\'/snippet/'+h.id+'\')"><span class="hot-rank '+(i<3?'top3':'')+'">'+(i+1)+'</span><span class="hot-item-title">'+esc(h.title)+'</span><span class="hot-item-views">&#128065; '+(h.viewCount||0)+'</span></div>'}).join('')+'</div></div>'}
+    sb.innerHTML=hH;
+  }).catch(function(e){main.innerHTML='<div class="empty-state"><div class="title">加载失败</div><div class="desc">'+esc(e.message)+'</div><div class="desc" style="margin-top:8px">请确保后端运行在 '+API_BASE+'</div></div>';sb.innerHTML=''});
+}
+
+function sCard(s){
+  var tH=(s.tags||[]).map(function(t){return'<span class="tag">'+esc(t)+'</span>'}).join('');
+  return '<div class="snippet-card" onclick="if(!event.target.closest(\'.snippet-card-actions,.snippet-card-footer,.code-preview\'))nav(\'/snippet/'+s.id+'\')"><div class="snippet-card-header"><div><span class="snippet-card-title">'+esc(s.title)+'</span>'+(s.isPublic===0?'<span class="private-badge">私有</span>':'')+'</div><span class="snippet-card-lang" style="'+langS(s.language)+'">'+esc(s.language||'')+'</span></div>'+(s.description?'<div class="snippet-card-desc">'+esc(s.description)+'</div>':'')+(tH?'<div class="snippet-card-tags">'+tH+'</div>':'')+'<div class="snippet-card-meta"><span>&#128065; '+(s.viewCount||0)+'</span><span>&#9825; '+(s.likeCount||0)+'</span><span>&#9733; '+(s.collectCount||0)+'</span><span>'+(s.createTime||'')+'</span></div><div class="snippet-card-actions" onclick="event.stopPropagation()"><button class="btn btn-sm btn-ghost" onclick="togPrev(this,'+s.id+')">展开代码</button></div><div class="code-preview" id="prev-'+s.id+'"></div></div>';
+}
+
+function togPrev(btn,id){
+  var el=document.getElementById('prev-'+id);if(!el)return;
+  if(el.classList.contains('open')){el.classList.remove('open');btn.textContent='展开代码';return}
+  btn.textContent='加载中...';btn.disabled=true;
+  req('GET','/api/snippet/public/'+id).then(function(s){el.innerHTML=hl(s.content||'',s.language);el.classList.add('open');btn.textContent='收起代码'}).catch(function(e){toast('加载失败','error');btn.textContent='展开代码'}).then(function(){btn.disabled=false});
+}
+
+function applyF(k,v){var r=getR(),parts=r.split('?'),p=new URLSearchParams(parts[1]||'');if(v)p.set(k,v);else p.delete(k);p.delete('page');nav(parts[0]+'?'+p.toString())}
+
+function renderDetail(main,id){
+  main.innerHTML='<div class="loading"><div class="spinner"></div><br>加载中...</div>';
+  req('GET','/api/snippet/public/'+id).then(function(s){
+    var tH=(s.tags||[]).map(function(t){return'<span class="tag">'+esc(t)+'</span>'}).join('');
+    main.innerHTML='<div class="detail-page"><div class="back-link" onclick="history.back()">&#8592; 返回</div><div class="detail-header"><h1 class="detail-title">'+esc(s.title)+'</h1><div class="detail-meta"><span class="snippet-card-lang" style="'+langS(s.language)+'">'+esc(s.language||'')+'</span><span>创建于 '+(s.createTime||'')+'</span></div></div>'+(tH?'<div class="snippet-card-tags" style="margin-bottom:16px">'+tH+'</div>':'')+'<div class="detail-stats"><div class="stat-item">&#128065; <span class="count">'+(s.viewCount||0)+'</span> 浏览</div><div class="stat-item">&#9825; <span class="count">'+(s.likeCount||0)+'</span> 点赞</div><div class="stat-item">&#9733; <span class="count">'+(s.collectCount||0)+'</span> 收藏</div></div><div class="detail-actions">'+(isLoggedIn()?'<button class="btn btn-outline btn-sm" id="btn-like" onclick="togLike('+id+')">&#9825; 点赞</button><button class="btn btn-outline btn-sm" id="btn-col" onclick="togCol('+id+')">&#9733; 收藏</button>':'<button class="btn btn-outline btn-sm" onclick="nav(\'/login\')">&#9825; 点赞（需登录）</button><button class="btn btn-outline btn-sm" onclick="nav(\'/login\')">&#9733; 收藏（需登录）</button>')+'<button class="btn btn-outline btn-sm" id="btn-ai" onclick="explainCode('+id+')">&#129302; AI解释</button></div><div class="code-block">'+hl(s.content||'',s.language)+'</div><div class="ai-explain-panel" id="ai-panel"><div class="ai-explain-header">&#129302; AI 代码解释</div><div class="ai-explain-content" id="ai-content"></div></div></div>';
+  }).catch(function(e){main.innerHTML='<div class="empty-state"><div class="title">加载失败</div><div class="desc">'+esc(e.message)+'</div></div>'});
+}
+
+function togLike(id){if(!isLoggedIn()){nav('/login');return}var btn=document.getElementById('btn-like');btn.disabled=true;req('POST','/api/interaction/like/'+id).then(function(){toast('点赞成功','success');btn.innerHTML='&#10084; 已点赞'}).catch(function(e){if(e.message.indexOf('已点赞')>=0){req('DELETE','/api/interaction/like/'+id).then(function(){toast('取消点赞','info');btn.innerHTML='&#9825; 点赞'})}else{toast(e.message,'error')}}).then(function(){btn.disabled=false})}
+
+function togCol(id){if(!isLoggedIn()){nav('/login');return}var btn=document.getElementById('btn-col');btn.disabled=true;req('POST','/api/interaction/collect/'+id).then(function(){toast('收藏成功','success');btn.innerHTML='&#9733; 已收藏'}).catch(function(e){if(e.message.indexOf('已收藏')>=0){req('DELETE','/api/interaction/collect/'+id).then(function(){toast('取消收藏','info');btn.innerHTML='&#9733; 收藏'})}else{toast(e.message,'error')}}).then(function(){btn.disabled=false})}
+
+function explainCode(id){
+  var panel=document.getElementById('ai-panel'),content=document.getElementById('ai-content'),btn=document.getElementById('btn-ai');
+  if(!panel||!content||!btn)return;
+  if(panel.classList.contains('open')){panel.classList.remove('open');btn.textContent='&#129302; AI解释';return}
+  btn.disabled=true;btn.textContent='AI分析中...';
+  content.textContent='正在调用 DeepSeek AI 分析代码，请稍候...';
+  panel.classList.add('open');
+  req('GET','/api/snippet/public/'+id+'/explain').then(function(text){
+    content.textContent=text;
+    btn.textContent='&#129302; 收起解释';
+  }).catch(function(e){
+    content.textContent='AI 解释失败：'+e.message;
+    toast(e.message,'error');
+    btn.textContent='&#129302; AI解释';
+  }).then(function(){btn.disabled=false});
+}
+
+function renderAuth(main,mode){
+  var isL=mode==='login';
+  main.innerHTML='<div class="auth-page"><div class="auth-card"><div class="auth-tabs"><div class="auth-tab '+(isL?'active':'')+'" onclick="nav(\'/login\')">登录</div><div class="auth-tab '+(!isL?'active':'')+'" onclick="nav(\'/register\')">注册</div></div><div id="afa"></div></div></div>';
+  var fa=document.getElementById('afa');
+  if(isL){fa.innerHTML='<div class="form-group"><label class="form-label">用户名</label><input class="form-input" id="l-un" placeholder="请输入用户名"/></div><div class="form-group"><label class="form-label">密码</label><input class="form-input" id="l-pw" type="password" placeholder="请输入密码"/></div><button class="btn btn-primary" style="width:100%;justify-content:center;padding:10px" onclick="doLogin()">登录</button>'}
+  else{fa.innerHTML='<div class="form-group"><label class="form-label">用户名</label><input class="form-input" id="r-un" placeholder="3-20个字符"/><div class="form-hint">3-20个字符</div></div><div class="form-group"><label class="form-label">密码</label><input class="form-input" id="r-pw" type="password" placeholder="6-20个字符"/><div class="form-hint">6-20个字符</div></div><div class="form-group"><label class="form-label">确认密码</label><input class="form-input" id="r-pw2" type="password" placeholder="再次输入密码"/></div><div class="form-group"><label class="form-label">昵称（可选）</label><input class="form-input" id="r-nn" placeholder="显示名称"/></div><button class="btn btn-primary" style="width:100%;justify-content:center;padding:10px" onclick="doRegister()">注册</button>'}
+}
+
+function doLogin(){var un=document.getElementById('l-un').value.trim(),pw=document.getElementById('l-pw').value;if(!un||!pw){toast('请填写用户名和密码','error');return}req('POST','/api/user/login',{username:un,password:pw}).then(function(tk){saveUser({username:un,token:tk});toast('登录成功','success');nav('/')}).catch(function(e){toast(e.message,'error')})}
+
+function doRegister(){var un=document.getElementById('r-un').value.trim(),pw=document.getElementById('r-pw').value,pw2=document.getElementById('r-pw2').value,nn=document.getElementById('r-nn').value.trim();if(!un||!pw){toast('请填写用户名和密码','error');return}if(un.length<3||un.length>20){toast('用户名长度为3-20个字符','error');return}if(pw.length<6||pw.length>20){toast('密码长度为6-20个字符','error');return}if(pw!==pw2){toast('两次密码输入不一致','error');return}req('POST','/api/user/register',{username:un,password:pw,nickname:nn}).then(function(){toast('注册成功，请登录','success');nav('/login')}).catch(function(e){toast(e.message,'error')})}
+
+function doLogout(){clearUser();toast('已退出登录','info');nav('/')}
+
+function renderMySnippets(main,params){
+  var pg=params.get('page')||'1';main.innerHTML='<div class="loading"><div class="spinner"></div><br>加载中...</div>';
+  req('GET','/api/snippet/my?page='+pg+'&pageSize='+PAGE_SIZE).then(function(data){
+    var list=(data&&data.list)||[],total=(data&&data.total)||0,curPg=(data&&data.page)||1,totPg=Math.ceil(total/PAGE_SIZE);
+    var lH=!list.length?'<div class="empty-state"><div class="title">暂无片段</div><div class="desc">点击上方按钮创建你的第一个代码片段</div></div>':'<div class="snippet-list">'+list.map(function(s){var tH=(s.tags||[]).map(function(t){return'<span class="tag">'+esc(t)+'</span>'}).join('');return '<div class="snippet-card"><div class="snippet-card-header"><div><span class="snippet-card-title">'+esc(s.title)+'</span>'+(s.isPublic===0?'<span class="private-badge">私有</span>':'')+'</div><span class="snippet-card-lang" style="'+langS(s.language)+'">'+esc(s.language||'')+'</span></div>'+(s.description?'<div class="snippet-card-desc">'+esc(s.description)+'</div>':'')+(tH?'<div class="snippet-card-tags">'+tH+'</div>':'')+'<div class="snippet-card-meta"><span>&#128065; '+(s.viewCount||0)+'</span><span>&#9825; '+(s.likeCount||0)+'</span><span>&#9733; '+(s.collectCount||0)+'</span><span>'+(s.createTime||'')+'</span></div><div class="snippet-card-footer"><button class="btn btn-sm btn-outline" onclick="nav(\'/edit/'+s.id+'\')">&#9998; 编辑</button><button class="btn btn-sm btn-danger" onclick="delSnip('+s.id+')">&#128465; 删除</button></div></div>'}).join('')+'</div>';
+    var pH=pag(curPg,totPg,function(p){return'/my?page='+p});
+    main.innerHTML='<div class="page-header"><h2 class="page-title">我的片段</h2><button class="btn btn-primary" onclick="nav(\'/create\')">+ 创建片段</button></div>'+lH+pH;
+  }).catch(function(e){main.innerHTML='<div class="empty-state"><div class="title">加载失败</div><div class="desc">'+esc(e.message)+'</div></div>'});
+}
+
+function delSnip(id){if(!confirm('确定要删除这个片段吗？'))return;req('DELETE','/api/snippet/'+id).then(function(){toast('删除成功','success');nav('/')}).catch(function(e){toast(e.message,'error')})}
+
+function renderEditor(main,editId){
+  if(!categories.length){req('GET','/api/category').then(function(c){categories=c}).catch(function(){})}
+  var s=null;
+  if(editId){main.innerHTML='<div class="loading"><div class="spinner"></div><br>加载中...</div>';req('GET','/api/snippet/public/'+editId).then(function(d){s=d;buildForm()}).catch(function(){req('GET','/api/snippet/my?page=1&pageSize=100').then(function(d){s=(d.list||[]).find(function(x){return x.id===parseInt(editId)});buildForm()})})}
+  else{buildForm()}
+  function buildForm(){
+    var tags=s?(s.tags||[]):[],isPub=s?(s.isPublic!==0):true;
+    main.innerHTML='<div style="max-width:800px"><div class="back-link" onclick="nav(\'/my\')">&#8592; 返回</div><div class="page-header"><h2 class="page-title">'+(editId?'编辑片段':'创建片段')+'</h2></div><div class="auth-card" style="max-width:none;padding:24px"><div class="form-group"><label class="form-label">标题 *</label><input class="form-input" id="ed-t" placeholder="片段标题" maxlength="100" value="'+(editId?esc(s.title):'')+'"/></div><div class="form-group"><label class="form-label">编程语言 *</label><select class="form-input" id="ed-l">'+LANGUAGES.map(function(l){return'<option value="'+l+'" '+(s&&s.language===l?'selected':'')+'>'+l+'</option>'}).join('')+'</select></div><div class="form-group"><label class="form-label">分类</label><select class="form-input" id="ed-c"><option value="">不选择分类</option>'+categories.map(function(c){return'<option value="'+c.id+'" '+(s&&s.categoryId==c.id?'selected':'')+'>'+esc(c.name)+'</option>'}).join('')+'</select></div><div class="form-group"><label class="form-label">代码内容 *</label><textarea class="form-input" id="ed-co" placeholder="在此粘贴你的代码...">'+(editId?esc(s.content||''):'')+'</textarea></div><div class="form-group"><label class="form-label">描述</label><textarea class="form-input" id="ed-d" placeholder="简要描述" style="min-height:80px">'+(editId?esc(s.description||''):'')+'</textarea></div><div class="form-group"><label class="form-label">标签（回车或逗号添加）</label><div class="tag-input-wrap" id="tiw"><div id="ed-td">'+tags.map(function(n){return'<span class="tag-input-tag">'+esc(n)+' <span class="remove-tag" onclick="removeET(\''+esc(n).replace(/'/g,"\\'")+'\')">&times;</span></span>'}).join('')+'</div><input class="tag-input-field" id="ed-ti" placeholder="输入标签后按回车"/></div></div><div class="form-group"><div class="toggle-group"><div class="toggle-switch '+(isPub?'active':'')+'" id="ed-sw" onclick="this.classList.toggle(\'active\');document.getElementById(\'ed-sl\').textContent=this.classList.contains(\'active\')?\'公开\':\'私有\'"></div><span class="toggle-label" id="ed-sl">'+(isPub?'公开':'私有')+'</span></div></div><div style="display:flex;gap:12px;margin-top:8px"><button class="btn btn-primary" onclick="saveSnip('+(editId||'null')+')">'+(editId?'保存修改':'创建片段')+'</button><button class="btn btn-outline" onclick="nav(\'/my\')">取消</button></div></div></div>';
+    var eTags=tags.slice(),ti=document.getElementById('ed-ti'),td=document.getElementById('ed-td');
+    function reT(){td.innerHTML=eTags.map(function(n){return'<span class="tag-input-tag">'+esc(n)+' <span class="remove-tag" onclick="removeET(\''+esc(n).replace(/'/g,"\\'")+'\')">&times;</span></span>'}).join('')}
+    ti.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===','){e.preventDefault();var v=this.value.replace(/,/g,'').trim();if(v&&eTags.indexOf(v)<0){eTags.push(v);reT()}this.value=''}if(e.key==='Backspace'&&!this.value&&eTags.length){eTags.pop();reT()}});
+    window._gET=function(){return eTags};
+    window._rET=function(n){eTags=eTags.filter(function(t){return t!==n});reT()};
+  }
+}
+
+function removeET(n){if(window._rET)window._rET(n)}
+
+function saveSnip(editId){
+  var title=document.getElementById('ed-t').value.trim(),language=document.getElementById('ed-l').value,categoryId=document.getElementById('ed-c').value,content=document.getElementById('ed-co').value,description=document.getElementById('ed-d').value.trim(),isPublic=document.getElementById('ed-sw').classList.contains('active')?1:0,tags=window._gET?window._gET():[];
+  if(!title){toast('请填写标题','error');return}if(!content){toast('请填写代码内容','error');return}
+  var body={title:title,content:content,language:language,description:description,isPublic:isPublic,tags:tags};if(categoryId)body.categoryId=parseInt(categoryId);
+  var p=editId?req('PUT','/api/snippet/'+editId,body):req('POST','/api/snippet',body);
+  p.then(function(){toast(editId?'更新成功':'创建成功','success');nav('/')}).catch(function(e){toast(e.message,'error')});
+}
+
+function renderCollections(main,params){
+  var pg=params.get('page')||'1';main.innerHTML='<div class="loading"><div class="spinner"></div><br>加载中...</div>';
+  req('GET','/api/interaction/collect/my?page='+pg+'&pageSize='+PAGE_SIZE).then(function(data){
+    var list=(data&&data.list)||[],total=(data&&data.total)||0,curPg=(data&&data.page)||1,totPg=Math.ceil(total/PAGE_SIZE);
+    var lH=!list.length?'<div class="empty-state"><div class="title">暂无收藏</div><div class="desc">浏览公开片段时可以点击收藏按钮添加</div></div>':'<div class="snippet-list">'+list.map(function(s){var tH=(s.tags||[]).map(function(t){return'<span class="tag">'+esc(t)+'</span>'}).join('');return '<div class="snippet-card"><div class="snippet-card-header"><span class="snippet-card-title" onclick="nav(\'/snippet/'+s.id+'\')">'+esc(s.title)+'</span><span class="snippet-card-lang" style="'+langS(s.language)+'">'+esc(s.language||'')+'</span></div>'+(s.description?'<div class="snippet-card-desc">'+esc(s.description)+'</div>':'')+(tH?'<div class="snippet-card-tags">'+tH+'</div>':'')+'<div class="snippet-card-meta"><span>&#128065; '+(s.viewCount||0)+'</span><span>&#9825; '+(s.likeCount||0)+'</span><span>'+(s.createTime||'')+'</span></div><div class="snippet-card-footer"><button class="btn btn-sm btn-outline" onclick="nav(\'/snippet/'+s.id+'\')">查看详情</button><button class="btn btn-sm btn-danger" onclick="unCol('+s.id+')">&#9733; 取消收藏</button></div></div>'}).join('')+'</div>';
+    var pH=pag(curPg,totPg,function(p){return'/collections?page='+p});
+    main.innerHTML='<div class="page-header"><h2 class="page-title">我的收藏</h2></div>'+lH+pH;
+  }).catch(function(e){main.innerHTML='<div class="empty-state"><div class="title">加载失败</div><div class="desc">'+esc(e.message)+'</div></div>'});
+}
+
+function unCol(id){req('DELETE','/api/interaction/collect/'+id).then(function(){toast('取消收藏成功','info');nav('/collections')}).catch(function(e){toast(e.message,'error')})}
+
+function pag(cur,tot,urlFn){
+  if(tot<=1)return '';var mx=5,ps=[];
+  if(tot<=mx){for(var i=1;i<=tot;i++)ps.push(i)}else{ps.push(1);var st=Math.max(2,cur-1),en=Math.min(tot-1,cur+1);if(cur<=3)en=Math.min(4,tot-1);if(cur>=tot-2)st=Math.max(tot-3,2);if(st>2)ps.push('...');for(var j=st;j<=en;j++)ps.push(j);if(en<tot-1)ps.push('...');ps.push(tot)}
+  var h='<div class="pagination"><button class="page-btn" '+(cur<=1?'disabled':'')+' onclick="nav(\''+urlFn(cur-1)+'\')">上一页</button>';
+  for(var k=0;k<ps.length;k++){var p=ps[k];if(p==='...')h+='<span class="page-info">...</span>';else h+='<button class="page-btn '+(p===cur?'active':'')+'" onclick="nav(\''+urlFn(p)+'\')">'+p+'</button>'}
+  h+='<button class="page-btn" '+(cur>=tot?'disabled':'')+' onclick="nav(\''+urlFn(cur+1)+'\')">下一页</button></div>';return h;
+}
+
+loadUser();
+doRoute();
+</script>
+</body>
+</html>
